@@ -1,0 +1,53 @@
+1. A class of messageBroker //Publish-Subscribe Social Platform
+	-unordered_map<int, text> mp_text //Use a map to get the text given its text_id
+	-unordered_map<int, set<int>> sub // sub[i][j] denotes the id of jth subscriber of user with id 'i'
+	-unordered_map<int, priority_queue<text>> feed //feed[uid] represents all relevant unread posts for the user uid
+
+2. A class for text
+	-int text_id
+	-string text
+	-int time_posted
+	-int uid //posted by the user uid
+	-int type // 0-New, 1-REPOST, 2-REPLY
+	-int repId // id of the text, to which this text is a reply. -1 if this text is not a reply in first place
+	
+SUBSCRIBE,t,uid,pid
+	-Create users uid and pid if they dont exist
+	-Add uid to sub[pid]
+	-O(logn) time, n = no. of subscribers of pid
+	
+	
+UNSUBSCRIBE,t,uid,pid
+	-If pid does not exist, or uid is already not sub[pid] (set.find()), throw exception 
+	-Otherwise remove uid from sub[pid]
+	-O(logn) time, n = no. of subscribers of pid
+	
+PUBLISH,t,uid,NEW,text,tid
+	-Create a text object with above details
+	-Add text object to broker
+	-Add text to feed[u] for all u s.t. u exists in sub[uid] //this can serve as a notification
+	-O(nlogm) time, n = no. of subscribers of uid, m is number of unseen post by a subscriber
+	
+PUBLISH,t,uid,REPOST(ptid),tid
+	-Retrieve string (text) corresponding to ptid
+	-Create a text object with above details
+	-Add text object to broker
+	-Add text to feed[u] for all u s.t. u exists in sub[uid]
+	-O(nlogm) time, n = no. of subscribers of uid, m is number of unseen post by a subscriber
+	
+PUBLISH,t,uid,REPLY(ptid),text,tid
+	-Retrieve the user u_og who posted the text with id ptid
+	-Create a text object with above details
+	-Add text object to broker
+	-Add text to feed[u] for all u s.t. u exists in sub[uid] //this can be skipped as you may want to reply just one person
+	-Add text to feed[u_og] if you didnt already add
+	-O(nlogm) time, n = no. of subscribers of uid, m is number of unseen post by a subscriber
+	
+READ,t,uid
+	-Retrieve the feed[uid]
+	-One by one print the texts from feed:
+		-keep printing pq_top, stop when pq_top_time >=t
+		-If a text is reply, print it
+		-Otherwise, check if uid is still subscribed to publisher of this text, if yes, print it otherwise, just pop this text 
+	-O(nlogn) time
+	
